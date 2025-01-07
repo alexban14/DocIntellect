@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "doc-intellect"
+version = "0.1.0"
+description = ""
+authors = ["Alex Ban <alexbanut10@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.100.0"
+uvicorn = "^0.23.0"
+requests = "^2.31.0"
+pydantic-settings = "^2.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^8.3.4"
+pre-commit = "^4.0.1"
+tox = "^4.23.0"
+pytest-cov = "^6.0.0"
+
+[build-system]
+requires = ["poetry>=1.6"]
+build-backend = "poetry.core.masonry.api"

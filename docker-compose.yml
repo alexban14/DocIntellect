@@ -1,0 +1,103 @@
+
+version: '3.8'
+services:
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8080:80"
+  #   depends_on:
+  #     - document_service
+  #     - llm_service
+  #     - chat_service
+
+  llm_service:
+    restart: always
+    hostname: llm_service
+    build:
+      context: ./llm_service
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8000"
+    depends_on:
+      - vector_db
+        # - chat_service
+    volumes:
+      - "./llm_service/app:/app/app"
+    command: uvicorn app.main:api --host 0.0.0.0 --port 8000 --reload
+
+  # llm_service:
+  #   build:
+  #     context: ./data_processing_service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8001:8000"
+  #   depends_on:
+  #     - vector_db
+  #     - db
+
+  # chat_service:
+  #   build:
+  #     context: ./chat_service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8003:8000"
+  #   depends_on:
+  #     - db
+
+  # auth_service:
+  #   build:
+  #     context: ./auth_service
+  #     dockerfile: Dockerfile
+  #     ports:
+  #       - "8006:8000"
+  #     depends_on:
+  #       - db
+
+  # dashboard_service:
+  #   build:
+  #     context: ./dashboard_service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8007:8000"
+  #   depends_on:
+  #     - db
+
+  vector_db:
+    image: chromadb/chroma:latest
+    ports:
+      - "8004:8004"
+    volumes:
+      - vector_data:/data
+
+  db:
+    image: postgres:14-alpine3.21
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: chat_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  llm_host:
+    image: ollama/ollama:latest
+    ports:
+      - "8005:11434"
+    runtime: nvidia  # Specify the NVIDIA runtime for Docker to use the GPU
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+volumes:
+  vector_data:
+  db_data:
