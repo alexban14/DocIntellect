@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Set the working directory inside the container
+# Set the working directory
 WORKDIR /app
 
 # Install system dependencies required for building Python packages and running the app
@@ -10,18 +10,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Poetry for dependency management
+# Install Poetry globally
 RUN curl -sSL https://install.python-poetry.org | python3 - && \
     export PATH="/root/.local/bin:$PATH" && \
     poetry config virtualenvs.create false
 
-# Copy Poetry dependency files into the container
+# Copy dependency files first (to leverage Docker cache)
 COPY ./pyproject.toml ./poetry.lock* /app/
 
-# Install Python dependencies (Production or Development)
-ARG INSTALL_DEV=true
+# Install Python dependencies (optimized for production or development)
 RUN export PATH="/root/.local/bin:$PATH" && \
-    if [ "$INSTALL_DEV" = "true" ] ; then poetry install --no-root ; else poetry install --no-root --no-dev ; fi
+    if [ "$ENV" = "development" ] ; then poetry install --no-root --with dev; else poetry install --no-root --without dev; fi
 
 # Copy application source code into the container
 COPY ./app /app/app
@@ -29,12 +28,20 @@ COPY ./app /app/app
 # Install Uvicorn and Gunicorn globally
 RUN pip install --no-cache-dir uvicorn gunicorn
 
-# Expose the application's default port
+# Expose application port
 EXPOSE 8000
 
 # Set environment variables
-ENV VARIABLE_NAME=api
+ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONPATH=/app
+ENV VARIABLE_NAME=api
 
-# Command to run the FastAPI application using Gunicorn with Uvicorn workers
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "app.main:api"]
+# Add and set up the entrypoint script
+COPY ./.docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Remove unnecessary build dependencies for smaller images
+RUN apt-get purge -y build-essential && apt-get autoremove -y
+
+# Entrypoint command
+ENTRYPOINT ["/app/entrypoint.sh"]

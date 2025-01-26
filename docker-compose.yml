@@ -1,6 +1,23 @@
 
 version: '3.8'
 services:
+  llm_host_service:
+    image: ollama/ollama:latest
+    ports:
+      - "8220:11434"
+    runtime: nvidia  # Specify the NVIDIA runtime for Docker to use the GPU
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    command: serve
+
   # frontend:
   #   build:
   #     context: ./frontend
@@ -12,20 +29,22 @@ services:
   #     - llm_service
   #     - chat_service
 
-  llm_service:
+  llm_interaction_service:
     restart: always
-    hostname: llm_service
+    hostname: llm_interaction_service
     build:
-      context: ./llm_service
+      context: ./llm_interaction_service
       dockerfile: Dockerfile
     ports:
-      - "8002:8000"
+      - "8222:8000"
     depends_on:
+      - llm_host_service
       - vector_db
-        # - chat_service
+      - db
     volumes:
-      - "./llm_service/app:/app/app"
-    command: uvicorn app.main:api --host 0.0.0.0 --port 8000 --reload
+      - "./llm_interaction_service/app:/app/app"
+    environment:
+      - ENV=development
 
   # llm_service:
   #   build:
@@ -81,22 +100,6 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-
-  llm_host:
-    image: ollama/ollama:latest
-    ports:
-      - "8005:11434"
-    runtime: nvidia  # Specify the NVIDIA runtime for Docker to use the GPU
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
 volumes:
   vector_data:

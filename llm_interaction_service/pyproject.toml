@@ -10,8 +10,9 @@ fastapi = "^0.100.0"
 uvicorn = "^0.23.0"
 requests = "^2.31.0"
 pydantic-settings = "^2.0"
+httpx = "^0.24.1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
 pre-commit = "^4.0.1"
 tox = "^4.23.0"
