@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from app.core.app_logger import setup_logging
 import logging
 from app.api.endpoints import hello
-from app.api.endpoints.interaction import generate
+from app.api.endpoints.interaction import process_file
 
 
 def create_api():
@@ -16,6 +16,6 @@ def create_api():
 
     # llm interaction endpoints
     llmInteractionPrefix = '/llm-interaction-api/v1'
-    api.include_router(generate.router, prefix=llmInteractionPrefix, tags=['LLmInteractionApi'])
+    api.include_router(process_file.router, prefix=llmInteractionPrefix, tags=['LLmInteractionApi', 'LlmProcessFile'])
 
     return api

@@ -17,17 +17,23 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     command: serve
-
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8080:80"
-  #   depends_on:
-  #     - document_service
-  #     - llm_service
-  #     - chat_service
+    networks:
+      - doc_intellect_network
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    env_file:
+      - ./client/.env.development
+    ports:
+      - "8762:5173"
+    depends_on:
+      - server
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    networks:
+      - doc_intellect_network
 
   llm_interaction_service:
     restart: unless-stopped
@@ -45,6 +51,8 @@ services:
       - "./llm_interaction_service/app:/app/app"
     environment:
       - ENV=development
+    networks:
+      - doc_intellect_network
 
   # llm_service:
   #   build:
@@ -104,3 +112,7 @@ services:
 # volumes:
 #   vector_data:
 #   db_data:
+
+networks:
+  doc_intellect_network:
+    driver: bridge
