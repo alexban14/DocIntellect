@@ -1,0 +1,36 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+ARG ENV=development
+ENV ENV=$ENV
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    libgl1-mesa-glx \
+    libpq-dev \
+    autoconf \
+    gcc \
+    make && \
+    apt-get -y install tesseract-ocr && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN curl -sSL https://install.python-poetry.org | python3 - && \
+    export PATH="/root/.local/bin:$PATH" && \
+    poetry config virtualenvs.create false && \
+    poetry config installer.max-workers 1
+
+COPY ./pyproject.toml ./poetry.lock* /app/
+
+RUN poetry export --without-hashes --format=requirements.txt > requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ./app /app/app
+
+EXPOSE 8000
+
+COPY ./.docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]

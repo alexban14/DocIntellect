@@ -7,13 +7,19 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
-    libpq-dev && \
+    libgl1-mesa-glx \
+    libpq-dev \
+    autoconf \
+    gcc \
+    make && \
+    apt-get -y install tesseract-ocr && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Poetry globally
 RUN curl -sSL https://install.python-poetry.org | python3 - && \
     export PATH="/root/.local/bin:$PATH" && \
-    poetry config virtualenvs.create false
+    poetry config virtualenvs.create false && \
+    poetry config installer.max-workers 1
 
 # Copy dependency files first (to leverage Docker cache)
 COPY ./pyproject.toml ./poetry.lock* /app/

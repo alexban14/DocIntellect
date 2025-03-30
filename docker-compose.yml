@@ -30,7 +30,7 @@ services:
   #     - chat_service
 
   llm_interaction_service:
-    restart: always
+    restart: unless-stopped
     hostname: llm_interaction_service
     build:
       context: ./llm_interaction_service
@@ -39,8 +39,8 @@ services:
       - "8222:8000"
     depends_on:
       - llm_host_service
-      - vector_db
-      - db
+      # - vector_db
+      # - db
     volumes:
       - "./llm_interaction_service/app:/app/app"
     environment:
@@ -83,24 +83,24 @@ services:
   #   depends_on:
   #     - db
 
-  vector_db:
-    image: chromadb/chroma:latest
-    ports:
-      - "8004:8004"
-    volumes:
-      - vector_data:/data
+  # vector_db:
+  #   image: chromadb/chroma:latest
+  #   ports:
+  #     - "8004:8004"
+  #   volumes:
+  #     - vector_data:/data
 
-  db:
-    image: postgres:14-alpine3.21
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: chat_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
+#   db:
+#     image: postgres:17-bookworm
+#     environment:
+#       POSTGRES_USER: admin
+#       POSTGRES_PASSWORD: password
+#       POSTGRES_DB: chat_db
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - db_data:/var/lib/postgresql/data
 
-volumes:
-  vector_data:
-  db_data:
+# volumes:
+#   vector_data:
+#   db_data:

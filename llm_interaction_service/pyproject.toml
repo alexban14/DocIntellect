@@ -1,16 +1,35 @@
 [tool.poetry]
-name = "doc-intellect"
+name = "DocIntelect"
 version = "0.1.0"
 description = ""
 authors = ["Alex Ban <alexbanut10@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.13"
+python-multipart = "*"
 fastapi = "^0.100.0"
 uvicorn = "^0.23.0"
 requests = "^2.31.0"
 pydantic-settings = "^2.0"
-httpx = "^0.24.1"
+httpx = "^0.28.0"
+libmagic = "^1.0"
+pymupdf = "^1.23.6"
+Pillow = "^10.0.0"
+numpy = ">=1.26.4, <2.0.0"
+opencv-python = "^4.11.0"
+pytesseract = "^0.3.13"
+langchain = "*"
+langchain-community = "*"
+langchain-ollama = "*"
+langchain-text-splitters = "*"
+langchain-unstructured = "*"
+chromadb = "*"
+langchain-chroma = "*"
+langchain-groq = "*"
+transformers = "*"
+sentence-transformers = "*" 
+unstructured = "^0.15.8"
+# unstructured = { version = "*", extras = ["pdf", "all"] }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
