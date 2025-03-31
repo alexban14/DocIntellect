@@ -28,7 +28,7 @@ services:
     ports:
       - "8762:5173"
     depends_on:
-      - server
+      - llm_interaction_service
     volumes:
       - ./client:/app
       - /app/node_modules

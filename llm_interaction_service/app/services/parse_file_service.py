@@ -115,7 +115,8 @@ class ParseFileService(ParseFileServiceInterface):
         system = f"""
             System:\n
             You are an assistant that helps users extract specific information from a file.
-            The return data should be in html format so that it can be displayed in a web app using "innerHTML".
+            The returned data should be of type JSON blob. The JSON must have a single key called "response", under that key,
+            the value should be a string representing html format so that it can be displayed in a web app using "innerHTML".
 
             File Context:\n{extracted_text}
         """ 
@@ -139,23 +140,30 @@ class ParseFileService(ParseFileServiceInterface):
             relevant_text = "\n".join([doc.page_content for doc in retrieved_docs])
 
             # Combine the relevant text with the original prompt
-            context = f"""
-                Invoice text data:
-                {relevant_text}
-            """
-            user_input = f"""
-                {prompt}.
-                The returned data should be of type JSON blob.
-                # The JSON must have the following structure:
-                {{
-                    "response": "single string with the response to the prompt",
-                }}
-            """
+            # context = f"""
+            #     System:\n
+            #     You are an assistant that helps users extract specific information from a file.
+            #     The return data should be in html format so that it can be displayed in a web app using "innerHTML".\n
+                
+            #     File text data:
+            #     {relevant_text}
+            # """
+            # user_input = f"""
+            #     {prompt}.
+            #     The returned data should be of type JSON blob.
+            #     # The JSON must have the following structure:
+            #     {{
+            #         "response": "single string with the response to the prompt",
+            #     }}
+            # """
+
+            prompt = self._create_custom_prompt(relevant_text, prompt)
 
             result = ""
             async for chunk in self._llm_service.generate_completion(
                     model=model,
-                    prompt=({"system": context, "user": user_input}),
+                    # prompt=({"system": context, "user": user_input}),
+                    prompt=(prompt),
                     stream=False
             ):
                 result += chunk["response"]
