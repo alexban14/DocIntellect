@@ -8,7 +8,13 @@ from langchain_chroma import Chroma
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from app.core.config import config
+from app.core.constants import ProcessingType
+from app.core.constants import AIService
+from app.core.constants import OCRService
+from app.core.constants import PDFToImageService
+from app.core.constants import ModelName
 from app.factories.ocr_service_factory import OCRServiceFactory
+from app.interfaces.ocr_service_interface import OCRServiceInterface
 from app.factories.llm_interaction_service_factory import LlmInteractionServiceFactory
 from app.factories.pdf_to_image_service_factory import PDFToImageServiceFactory
 from app.interfaces.parse_file_service_interface import ParseFileServiceInterface
@@ -26,11 +32,9 @@ class ParseFileService(ParseFileServiceInterface):
         """
         self._llm_service = None
         self.pdf_to_image_service = PDFToImageServiceFactory.create_pdf_to_image_service(
-            service_name=config.pdf_to_image_service
+            service_name=PDFToImageService.PYMUPDF_OPENCV_PILLOW
         )
-        self.ocr_service = OCRServiceFactory.create_ocr_service(
-            service_name=config.ocr_processing_service
-        )
+        self._ocr_service = None
         self.ollama_base_url = ollama_base_url
         self.groq_api_key = groq_api_key
 
@@ -64,7 +68,7 @@ class ParseFileService(ParseFileServiceInterface):
             raise HTTPException(status_code=500, detail="Failed to convert PDF to images")
 
         logger.info(f"Starting OCR processing on {len(images)} images")
-        extracted_text = await self.ocr_service.extract_text_from_multiple_images(images)
+        extracted_text = await self._ocr_service.extract_text_from_multiple_images(images)
 
         if not extracted_text:
             logger.warning("OCR processing completed but no text was extracted")
@@ -119,7 +123,7 @@ class ParseFileService(ParseFileServiceInterface):
             the value should be a string representing html format so that it can be displayed in a web app using "innerHTML".
 
             File Context:\n{extracted_text}
-        """ 
+        """
         user = f"""
             User Prompt: {user_prompt}"
         """
@@ -144,7 +148,7 @@ class ParseFileService(ParseFileServiceInterface):
             #     System:\n
             #     You are an assistant that helps users extract specific information from a file.
             #     The return data should be in html format so that it can be displayed in a web app using "innerHTML".\n
-                
+
             #     File text data:
             #     {relevant_text}
             # """
@@ -179,13 +183,14 @@ class ParseFileService(ParseFileServiceInterface):
             logger.error(f"Error processing with RAG: {e}")
             raise HTTPException(status_code=500, detail=f"Error processing with RAG: {str(e)}")
 
-    async def process_file(
+    async def process(
             self,
             model: str,
             file: UploadFile,
             processing_type: str,
             prompt: str = None,
-            ai_service: str = "ollama_local"
+            ai_service: str = AIService.GROQ_CLOUD,
+            ocr_technology: str = OCRService.PADDLE
     ) -> str:
         """
         Process file using the specified AI service.
@@ -200,6 +205,10 @@ class ParseFileService(ParseFileServiceInterface):
         Returns:
             Dict[str, Any]: The processed file data.
         """
+        self._ocr_service = OCRServiceFactory.create_ocr_service(
+            service_name=ocr_technology
+        )
+
         self._llm_service = LlmInteractionServiceFactory.create_llm_interaction_service(
             ai_service,
             self.ollama_base_url,
@@ -219,7 +228,7 @@ class ParseFileService(ParseFileServiceInterface):
             extracted_text = await self.process_with_ocr(pdf_bytes)
 
         # Process the invoice based on processing type
-        if processing_type == "parse":
+        if processing_type == ProcessingType.PARSE:
             # Create parse prompt
             parse_prompt = self._create_parse_prompt(extracted_text)
 
@@ -236,12 +245,12 @@ class ParseFileService(ParseFileServiceInterface):
             except json.JSONDecodeError as e:
                 raise HTTPException(status_code=500, detail=f"Failed to parse JSON response: {str(e)}")
 
-        elif processing_type == "prompt":
+        elif processing_type == ProcessingType.PROMPT:
             if not prompt:
                 raise HTTPException(status_code=400, detail="Prompt is required for 'prompt' type.")
 
             # For Groq with RAG
-            if ai_service == "groq_cloud":
+            if ai_service == AIService.GROQ_CLOUD:
                 return await self._process_with_rag(extracted_text, prompt, model)
 
             # For Ollama or other services

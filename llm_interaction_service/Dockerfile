@@ -1,53 +1,101 @@
-FROM python:3.11-slim
+FROM python:3.12-slim AS builder
 
-# Set the working directory
-WORKDIR /app
+ARG ENV=production
 
-# Install system dependencies required for building Python packages and running the app
+# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
-    libgl1-mesa-glx \
-    libpq-dev \
-    autoconf \
-    gcc \
-    make && \
-    apt-get -y install tesseract-ocr && \
-    rm -rf /var/lib/apt/lists/*
+    git \
+    pkg-config \
+    # Image processing build deps
+    libjpeg-dev \
+    zlib1g-dev \
+    libfreetype6-dev \
+    liblcms2-dev \
+    libopenjp2-7-dev \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry globally
+# Install Poetry
 RUN curl -sSL https://install.python-poetry.org | python3 - && \
     export PATH="/root/.local/bin:$PATH" && \
-    poetry config virtualenvs.create false && \
-    poetry config installer.max-workers 1
+    poetry config virtualenvs.create false
 
-# Copy dependency files first (to leverage Docker cache)
-COPY ./pyproject.toml ./poetry.lock* /app/
+ENV PATH="/root/.local/bin:$PATH"
 
-# Install Python dependencies (optimized for production or development)
-RUN export PATH="/root/.local/bin:$PATH" && \
-    if [ "$ENV" = "development" ] ; then poetry install --no-root --with dev; else poetry install --no-root --without dev; fi
+WORKDIR /app
 
-# Copy application source code into the container
-COPY ./app /app/app
+# Copy Poetry files
+COPY ./pyproject.toml poetry.lock* ./
 
-# Install Uvicorn and Gunicorn globally
+# Install dependencies with Poetry
+RUN if [ "$ENV" = "development" ] ; then \
+        poetry install --no-root --with dev; \
+    else \
+        poetry install --no-root --without dev; \
+    fi
+
+# Production stage
+FROM python:3.12-slim AS production
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Image processing runtime
+    libjpeg62-turbo \
+    zlib1g \
+    libfreetype6 \
+    liblcms2-2 \
+    libopenjp2-7 \
+    # libtiff5 \
+    # Graphics libraries
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    # Tesseract
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    # Utils
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create user
+RUN useradd --create-home --shell /bin/bash app && \
+    mkdir -p /app/logs /app/tmp && \
+    chown -R app:app /app && \
+    chmod -R 755 /app
+
+WORKDIR /app
+
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Install web servers
 RUN pip install --no-cache-dir uvicorn gunicorn
 
-# Expose application port
-EXPOSE 8000
+# Copy application
+COPY --chown=app:app ./app /app/app
+COPY --chown=app:app ./.env /app/.env
+COPY --chown=app:app ./.docker/entrypoint.sh /app/entrypoint.sh
 
-# Set environment variables
-ENV PATH="/root/.local/bin:$PATH"
-ENV PYTHONPATH=/app
-ENV VARIABLE_NAME=api
-
-# Add and set up the entrypoint script
-COPY ./.docker/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-# Remove unnecessary build dependencies for smaller images
-RUN apt-get purge -y build-essential && apt-get autoremove -y
+USER app
 
-# Entrypoint command
+ENV PYTHONPATH=/app \
+    VARIABLE_NAME=api \
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000 || exit 1
+
 ENTRYPOINT ["/app/entrypoint.sh"]

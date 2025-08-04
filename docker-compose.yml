@@ -1,24 +1,24 @@
 
 name: doc-intellect
 services:
-  llm_host_service:
-    image: ollama/ollama:latest
-    ports:
-      - "8220:11434"
-    runtime: nvidia  # Specify the NVIDIA runtime for Docker to use the GPU
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-    command: serve
-    networks:
-      - doc_intellect_network
+ # llm_host_service:
+  #  image: ollama/ollama:latest
+  #  ports:
+  #    - "8220:11434"
+  #  runtime: nvidia  # Specify the NVIDIA runtime for Docker to use the GPU
+  #  deploy:
+  #    resources:
+  #      reservations:
+  #        devices:
+  #          - driver: nvidia
+  #            count: 1
+  #            capabilities: [gpu]
+  #  environment:
+  #    - NVIDIA_VISIBLE_DEVICES=all
+  #    - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+  #  command: serve
+  #  networks:
+  #    - doc_intellect_network
   client:
     build:
       context: ./client
@@ -42,9 +42,9 @@ services:
       context: ./llm_interaction_service
       dockerfile: Dockerfile
     ports:
-      - "8222:8000"
-    depends_on:
-      - llm_host_service
+      - "8322:8000"
+    #depends_on:
+      # - llm_host_service
       # - vector_db
       # - db
     volumes:
