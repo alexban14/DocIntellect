@@ -9,6 +9,7 @@ import {
     CircularProgress,
     Box
 } from "@mui/material";
+import { processFile } from "../api/api.ts";
 
 const ChatPage: React.FC = () => {
     const [prompt, setPrompt] = useState("");
@@ -31,11 +32,8 @@ const ChatPage: React.FC = () => {
         formData.append("file", file);
 
         try {
-            const res = await axios.post(
-                `${apiUrl}/llm-interaction-api/v1/process-file`,
-                formData,
-                { headers: { "Content-Type": "multipart/form-data" } }
-            );
+            const res = await processFile(formData);
+
             setResponse(res.data.response);
         } catch (error) {
             console.error("Error:", error);

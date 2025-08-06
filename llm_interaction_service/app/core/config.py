@@ -5,7 +5,6 @@ from pydantic import Field
 class Config(BaseSettings):
     service_name: str = 'service_name'
     secret_key: str = 's3cr3t_k3y'
-    ocr_processing_service: str
     ocr_processing_service: str = Field(..., alias='OCR_PROCESSING_SERVICE')
     pdf_to_image_service: str = Field(..., alias='PDF_TO_IMAGE_SERVICE')
     ollama_base_url: str = Field(..., alias='OLLAMA_BASE_URL')
