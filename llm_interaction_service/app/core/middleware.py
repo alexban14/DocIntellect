@@ -14,6 +14,7 @@ def setup_cors(app: FastAPI):
         "http://localhost:8080",
         "http://localhost:8221",
         "http://localhost:8762",
+        "https://docintellect.banalexandru.online",
     ]
 
     app.add_middleware(

@@ -49,6 +49,7 @@ services:
       # - db
     volumes:
       - "./llm_interaction_service/app:/app/app"
+      - llm_interaction_data:/home/app/.paddleocr
     environment:
       - ENV=development
     networks:
@@ -109,7 +110,8 @@ services:
 #     volumes:
 #       - db_data:/var/lib/postgresql/data
 
-# volumes:
+volumes:
+  llm_interaction_data:
 #   vector_data:
 #   db_data:
 
