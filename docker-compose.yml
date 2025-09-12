@@ -23,8 +23,9 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
+    restart: unless-stopped
     env_file:
-      - ./client/.env.development
+      - ./client/.env
     ports:
       - "8762:5173"
     depends_on:
@@ -36,11 +37,11 @@ services:
       - doc_intellect_network
 
   llm_interaction_service:
-    restart: unless-stopped
     hostname: llm_interaction_service
     build:
       context: ./llm_interaction_service
       dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
       - "8322:8000"
     #depends_on:
@@ -51,7 +52,7 @@ services:
       - "./llm_interaction_service/app:/app/app"
       - llm_interaction_data:/home/app/.paddleocr
     environment:
-      - ENV=development
+      - ENV=${APP_ENV}
     networks:
       - doc_intellect_network
 
