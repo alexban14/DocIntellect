@@ -70,6 +70,11 @@ RUN useradd --create-home --shell /bin/bash app && \
     chown -R app:app /app && \
     chmod -R 755 /app
 
+# permissions for Paddle models directory
+RUN mkdir -p /home/app/.paddle \
+    chown -R app:app /home/app/.paddle \
+    chown -R 755 /home/app/.paddle
+
 WORKDIR /app
 
 # Copy Python packages from builder

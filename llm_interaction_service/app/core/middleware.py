@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import Depends, HTTPException, Header
+from fastapi import Depends, HTTPException, Header, Request
 from typing import Optional
 from starlette.status import HTTP_401_UNAUTHORIZED
 from app.core.config import config
@@ -14,7 +14,6 @@ def setup_cors(app: FastAPI):
         "http://localhost:8080",
         "http://localhost:8221",
         "http://localhost:8762",
-        "http://localhost:8322"
         "https://docintellect.banalexandru.online",
     ]
 
