@@ -3,9 +3,8 @@ from typing import Optional
 
 from app.interfaces.ocr_service_interface import OCRServiceInterface
 from app.services.tesseract_ocr_service import TesseractOCRService
-# Import other potential OCR services here in the future
-# from .azure_ocr_service import AzureOCRService
-# from .google_ocr_service import GoogleOCRService
+from app.services.paddle_ocr_service import PaddleOCRService
+from app.core.constants import OCRService
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,9 @@ class OCRServiceFactory:
     @staticmethod
     def create_ocr_service(
         service_name: str,
-        tesseract_cmd: Optional[str] = None
+        tesseract_cmd: Optional[str] = None,
+        lang: str = "en",
+        use_gpu: bool = False
     ) -> OCRServiceInterface:
         """
         Create an OCR service based on the configuration.
@@ -32,9 +33,12 @@ class OCRServiceFactory:
         """
         service_name = service_name.lower()
 
-        if service_name == 'tesseract':
+        if service_name == OCRService.TESSERACT:
             logger.info("Creating Tesseract OCR Service")
             return TesseractOCRService(tesseract_cmd)
+        elif service_name == OCRService.PADDLE:
+            logger.info("Creating Paddle OCR Service")
+            return PaddleOCRService(lang, use_gpu)
         # Add other service conditions here in the future
         # elif service_name == 'azure':
         #     return AzureOCRService(config)

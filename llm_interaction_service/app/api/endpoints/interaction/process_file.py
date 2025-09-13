@@ -1,10 +1,15 @@
 import os
 import logging
 import json
-from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Depends
+from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Depends, Request
 from fastapi.responses import JSONResponse
 from app.core.config import config
 from app.services.parse_file_service import ParseFileService
+from app.core.constants import ProcessingType
+from app.core.constants import AIService
+from app.core.constants import OCRService
+from app.core.constants import ModelName
+from app.core.middleware import authorize_client
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -17,11 +22,13 @@ def get_llm_interaction_service() -> ParseFileService:
 
 @router.post("/process-file")
 async def process_invoice(
+        _: bool = Depends(authorize_client),
         model: str = Form(...),
         file: UploadFile = File(...),
         processing_type: str = Form(...),
         prompt: str = Form(None),
-        ai_service: str = Form("ollama_local"),
+        ai_service: str = Form(AIService.GROQ_CLOUD),
+        ocr_technology: str = Form(OCRService.TESSERACT),
         parse_file_service: ParseFileService = Depends(get_llm_interaction_service)
 ):
     """
@@ -36,7 +43,7 @@ async def process_invoice(
         if ai_service not in ["ollama_local", "groq_cloud"]:
             raise HTTPException(status_code=400, detail="Invalid AI service. Use 'ollama_local' or 'groq_cloud'.")
 
-        result = await parse_file_service.process_file(
+        result = await parse_file_service.process(
             model=model,
             file=file,
             processing_type=processing_type,

@@ -6,7 +6,7 @@ class ParseFileServiceInterface(ABC):
     """Interface for processing file parsing requests."""
 
     @abstractmethod
-    async def process_file(
+    async def process(
             self,
             model: str,
             file: UploadFile,

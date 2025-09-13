@@ -1,20 +1,22 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { 
-    Card, 
-    CardContent, 
-    Typography, 
-    TextField, 
-    Button, 
-    CircularProgress, 
-    Box 
+import {
+    Card,
+    CardContent,
+    Typography,
+    TextField,
+    Button,
+    CircularProgress,
+    Box
 } from "@mui/material";
+import { processFile } from "../api/api.ts";
 
 const ChatPage: React.FC = () => {
     const [prompt, setPrompt] = useState("");
     const [file, setFile] = useState<File | null>(null);
     const [response, setResponse] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const apiUrl = import.meta.env.VITE_API_URL;
 
     const handleSubmit = async () => {
         if (!file || !prompt) return;
@@ -30,11 +32,8 @@ const ChatPage: React.FC = () => {
         formData.append("file", file);
 
         try {
-            const res = await axios.post(
-                "http://localhost:8222/llm-interaction-api/v1/process-file",
-                formData,
-                { headers: { "Content-Type": "multipart/form-data" } }
-            );
+            const res = await processFile(formData);
+
             setResponse(res.data.response);
         } catch (error) {
             console.error("Error:", error);
@@ -45,22 +44,22 @@ const ChatPage: React.FC = () => {
     };
 
     return (
-        <Box 
-            display="flex" 
-            flexDirection="column" 
-            alignItems="center" 
-            justifyContent="center" 
-            width="100vw" 
-            height="100vh"  
+        <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            width="100vw"
+            height="100vh"
             bgcolor="#f5f5f5"
             p={3}
         >
-            <Card 
-                sx={{ 
-                    width: "100%", 
-                    maxWidth: "800px", 
-                    p: 4, 
-                    boxShadow: 3, 
+            <Card
+                sx={{
+                    width: "100%",
+                    maxWidth: "800px",
+                    p: 4,
+                    boxShadow: 3,
                     bgcolor: "white",
 					overflow: "auto"
                 }}
@@ -81,16 +80,16 @@ const ChatPage: React.FC = () => {
                         sx={{ mb: 3 }}
                     />
 
-                    <Button 
-                        variant="contained" 
-                        component="label" 
-                        fullWidth 
+                    <Button
+                        variant="contained"
+                        component="label"
+                        fullWidth
                         sx={{ mb: 2 }}
                     >
                         Upload File
-                        <input 
-                            type="file" 
-                            hidden 
+                        <input
+                            type="file"
+                            hidden
                             accept=".txt,.pdf,.docx"
                             onChange={(e) => setFile(e.target.files?.[0] || null)}
                         />
@@ -114,12 +113,12 @@ const ChatPage: React.FC = () => {
                     </Button>
 
                     {response && (
-                        <Box 
-                            mt={3} 
-                            p={2} 
-                            bgcolor="#e3f2fd" 
-                            borderRadius={2} 
-                            borderLeft={4} 
+                        <Box
+                            mt={3}
+                            p={2}
+                            bgcolor="#e3f2fd"
+                            borderRadius={2}
+                            borderLeft={4}
                             borderColor="primary.main"
 							overflow="auto"
                         >

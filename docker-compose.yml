@@ -1,30 +1,31 @@
 
 name: doc-intellect
 services:
-  llm_host_service:
-    image: ollama/ollama:latest
-    ports:
-      - "8220:11434"
-    runtime: nvidia  # Specify the NVIDIA runtime for Docker to use the GPU
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-    command: serve
-    networks:
-      - doc_intellect_network
+ # llm_host_service:
+  #  image: ollama/ollama:latest
+  #  ports:
+  #    - "8220:11434"
+  #  runtime: nvidia  # Specify the NVIDIA runtime for Docker to use the GPU
+  #  deploy:
+  #    resources:
+  #      reservations:
+  #        devices:
+  #          - driver: nvidia
+  #            count: 1
+  #            capabilities: [gpu]
+  #  environment:
+  #    - NVIDIA_VISIBLE_DEVICES=all
+  #    - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+  #  command: serve
+  #  networks:
+  #    - doc_intellect_network
   client:
     build:
       context: ./client
       dockerfile: Dockerfile
+    restart: unless-stopped
     env_file:
-      - ./client/.env.development
+      - ./client/.env
     ports:
       - "8762:5173"
     depends_on:
@@ -36,21 +37,22 @@ services:
       - doc_intellect_network
 
   llm_interaction_service:
-    restart: unless-stopped
     hostname: llm_interaction_service
     build:
       context: ./llm_interaction_service
       dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
-      - "8222:8000"
-    depends_on:
-      - llm_host_service
+      - "8322:8000"
+    #depends_on:
+      # - llm_host_service
       # - vector_db
       # - db
     volumes:
       - "./llm_interaction_service/app:/app/app"
+      - llm_interaction_data:/home/app/.paddleocr
     environment:
-      - ENV=development
+      - ENV=${APP_ENV}
     networks:
       - doc_intellect_network
 
@@ -109,7 +111,8 @@ services:
 #     volumes:
 #       - db_data:/var/lib/postgresql/data
 
-# volumes:
+volumes:
+  llm_interaction_data:
 #   vector_data:
 #   db_data:
 
