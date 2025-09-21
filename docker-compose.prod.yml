@@ -1,0 +1,34 @@
+name: doc-intellect-prod
+
+services:
+  client:
+    image: ${DOC_INTELLECT_CLIENT_IMAGE}
+    restart: unless-stopped
+    env_file:
+      - ./client/.env
+    ports:
+      - "8762:5173"
+    depends_on:
+      - llm_interaction_service
+    networks:
+      - doc_intellect_network
+
+  llm_interaction_service:
+    hostname: llm_interaction_service
+    image: ${DOC_INTELLECT_LLM_INTERACTION_SERVICE_IMAGE}
+    restart: unless-stopped
+    ports:
+      - "8322:8000"
+    volumes:
+      - llm_interaction_paddle_data:/home/app/.paddleocr
+    environment:
+      - ENV=${APP_ENV}
+    networks:
+      - doc_intellect_network
+
+volumes:
+  llm_interaction_paddle_data:
+
+networks:
+  doc_intellect_network:
+    driver: bridge
