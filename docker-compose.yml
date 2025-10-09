@@ -51,8 +51,8 @@ services:
     volumes:
       - "./llm_interaction_service/app:/app/app"
       - llm_interaction_data:/home/app/.paddleocr
-    environment:
-      - ENV=${APP_ENV}
+    env_file:
+      - ./llm_interaction_service/.env
     networks:
       - doc_intellect_network
 
