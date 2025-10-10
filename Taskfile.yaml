@@ -1,0 +1,20 @@
+version: 3
+
+tasks:
+  build:
+    dotenv: ['.env']
+    cmds:
+        - docker build --tag "$LLM_INTERACTION_SERVICE_BASE_IMAGE_TAG_NAME" --build-arg BASE_IMAGE="$LLM_INTERACTION_SERVICE_BASE_IMAGE" --file ./.devops/images/microservices/llm_interaction_service/env/Dockerfile-base ./llm_interaction_service
+        - docker build --tag "$LLM_INTERACTION_SERVICE_IMAGE_TAG_NAME" --build-arg BASE_IMAGE_TAG_NAME="$LLM_INTERACTION_SERVICE_BASE_IMAGE_TAG_NAME" --file ./.devops/images/microservices/llm_interaction_service/env/Dockerfile ./llm_interaction_service
+
+  build-nginx:
+    dotenv: ['.env']
+    cmds:
+      - docker build --tag "$NGINX_SERVER_TAG_NAME" --build-arg BASE_IMAGE="$BASE_NGINX_IMAGE" --file ./.devops/images/nginx/Dockerfile ./.devops/images/nginx
+
+  push:
+    dotenv: ['.env']
+    cmds:
+      - docker push "$LLM_INTERACTION_SERVICE_BASE_IMAGE_TAG_NAME"
+      - docker push "$LLM_INTERACTION_SERVICE_IMAGE_TAG_NAME"
+      - docker push "$NGINX_SERVER_TAG_NAME"
