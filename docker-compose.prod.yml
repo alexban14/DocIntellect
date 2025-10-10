@@ -21,8 +21,8 @@ services:
       - "8322:8000"
     volumes:
       - llm_interaction_paddle_data:/home/app/.paddleocr
-    environment:
-      - ENV=${APP_ENV}
+    env_file:
+      - ./llm_interaction_service/.env
     networks:
       - doc_intellect_network
 

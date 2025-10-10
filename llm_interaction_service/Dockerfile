@@ -86,12 +86,6 @@ RUN pip install --no-cache-dir uvicorn gunicorn
 
 # Copy application
 COPY --chown=app:app ./app /app/app
-# Copy .env local
-#COPY --chown=app:app ./.env /app/.env
-# Copy the .env file from a build secret
-RUN --mount=type=secret,id=llm-env,dst=/tmp/.env \
-    cp /tmp/.env /app/.env && \
-    chown app:app /app/.env
 COPY --chown=app:app ./.docker/entrypoint.sh /app/entrypoint.sh
 
 RUN chmod +x /app/entrypoint.sh
