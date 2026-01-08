@@ -1,4 +1,4 @@
-from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM
 from typing import AsyncGenerator, Dict, Any
 from app.interfaces.llm_interaction_service_interface import LlmInteractionServiceInterface
 
@@ -32,7 +32,7 @@ class OllamaService(LlmInteractionServiceInterface):
             dict: JSON response from Langchain's Ollama model.
         """
         try:
-            client = Ollama(model=model, base_url=self.base_url)
+            client = OllamaLLM(model=model, base_url=self.base_url)
 
             prompt = prompt['system'] + "\n" + prompt['user']
 

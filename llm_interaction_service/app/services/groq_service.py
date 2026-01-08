@@ -1,7 +1,7 @@
 import os
 from typing import AsyncGenerator, Dict, Any
 from langchain_groq import ChatGroq
-from langchain.schema import AIMessage
+from langchain_core.messages import AIMessage
 from app.interfaces.llm_interaction_service_interface import LlmInteractionServiceInterface
 
 class GroqService(LlmInteractionServiceInterface):

@@ -5,8 +5,8 @@ import fitz
 from fastapi import UploadFile, HTTPException
 from typing import Dict, Any, List
 from langchain_chroma import Chroma
-from langchain.embeddings import SentenceTransformerEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.embeddings import SentenceTransformerEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from app.core.config import config
 from app.core.constants import ProcessingType
 from app.core.constants import AIService

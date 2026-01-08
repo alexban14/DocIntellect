@@ -27,7 +27,7 @@ class PaddleOCRService(OCRServiceInterface):
                 use_angle_cls=True,
                 use_gpu=use_gpu,
                 show_log=False,
-                enable_mkldnn=True  # Enable Intel MKL-DNN acceleration
+                enable_mkldnn=False  # SQL 08/01/2026: Disabled due to AttributeError: 'paddle.base.libpaddle.AnalysisConfig' object has no attribute 'set_mkldnn_cache_capacity'
             )
             logger.info("PaddleOCR initialized successfully")
         except Exception as e:
