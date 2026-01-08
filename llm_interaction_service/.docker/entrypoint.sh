@@ -8,5 +8,5 @@ if [ "$ENV" = "development" ]; then
   exec uvicorn app.main:api --host 0.0.0.0 --port 8000 --reload
 else
   echo "Running in production mode..."
-  exec gunicorn -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 app.main:api
+  exec gunicorn -k uvicorn.workers.UvicornWorker --forwarded-allow-ips "*" -b 0.0.0.0:8000 app.main:api
 fi
